@@ -1,0 +1,25 @@
+<html>
+
+<head>
+    <title>Todo app</title>
+
+</head>
+
+<body>
+    <h1>TO-DO List</h1>
+    <form method="POST" action="/todos/create">
+        <label for="description>">Insert a description</label>
+        <input type="text" name="description" id="description">
+        <input type="submit" value="Insert">
+    </form>
+    <ul>
+        <!-- qui stiamo utilizzando un ciclo for con jinja-->
+        {% for d in data %}
+        <li>
+            {{d.description}}
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>
