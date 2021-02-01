@@ -1,0 +1,67 @@
+<html>
+<!-- In quessto index utilizzeremo script javascript 
+     e ilmetodo fetch per inviare richieste alserver e ottenere risposte che vengono gestite
+     dal  client. è un metodo asincrono, quindila pagina all'invio del form non sara
+     ricaricata -->
+
+<head>
+    <title>Todo app</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>TO-DO List</h1>
+    <form id="form">
+        <label for="description>">Insert a description</label>
+        <input type="text" name="description" id="description">
+        <input type="submit" value="Insert">
+    </form>
+    <!-- inseriamo un messaggio di errore nel caso in cui
+         non la chiamta ajax non risulti-->
+    <div id="error" class="hidden">Something was wrong!</div>
+    <ul id="todos">
+        <!-- qui stiamo utilizzando un ciclo for con jinja-->
+        {% for d in data %}
+        <li>
+            {{d.description}}
+        </li>
+        {% endfor %}
+    </ul>
+    <script>
+        document.getElementById('form').onsubmit = function(e) {
+            e.preventDefault(); //questo non fa ricaricare la pagina cheè il comportamento di default
+            fetch('/todos/create', {
+                    method: 'POST', // qui abbiamo definito la route e il method che nel file precedente si trovavano all' interno del tag <form>
+                    body: JSON.stringify({
+                        'description': document.getElementById('description').value //nel corpo definiamo la variabile che voliamo passare
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json' //qui semplicemente definiamo l'headers per dirgli che il file è json
+                    }
+                })
+                .then(function(response) {
+                    return response.json(); // qui recuperiamo la risposta inizialmente come stringa che diventa json
+                })
+                .then(function(jsonResponse) {
+                    // qua inizia l'handler per manipolare le risposte del server
+                    // prima lofacevano con il file python adesso gestiamo tutto dal client
+                    console.log(jsonResponse);
+                    const liItem = document.createElement('LI'); // step1: creaimo un elemento <li> da aggiungere alla lista
+                    liItem.innerHTML = jsonResponse['description']; // step2: definiamo il valore da stampare sul <li>
+                    document.getElementById('todos').appendChild(liItem); //step3: aggiungiamo il valore alla lista
+                    document.getElementById('error').className = 'hidden';
+                    document.getElementById('description').value = '';
+                })
+                .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                    document.getElementById('error').className = '';
+                })
+        }
+    </script>
+</body>
+
+</html>
