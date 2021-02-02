@@ -101,14 +101,23 @@
                     // prima lofacevano con il file python adesso gestiamo tutto dal client
                     console.log(jsonResponse);
                     const liItem = document.createElement('LI'); // step1: creaimo un elemento <li> da aggiungere alla lista
-                    //costruzione della check box non riuscita
-                    //var checkBox = document.createElement('input');
-                    //checkBox.type = "checkbox";
-                    //liItem.appendChild(checkBox);
-                    liItem.innerHTML = jsonResponse['description']; // step2: definiamo il valore da stampare sul <li>
+                    //costruzione della check box RIUSCITA
+                    var inputCheckBox = document.createElement('input');
+                    inputCheckBox.setAttribute("type", "checkbox");
+                    inputCheckBox.dataset.id = jsonResponse['id'];
+                    inputCheckBox.className = 'check-completed'
+
+                    // step2: definiamo il valore da stampare sul <li>
                     document.getElementById('todos').appendChild(liItem); //step3: aggiungiamo il valore alla lista
+                    liItem.appendChild(inputCheckBox);
+                    var textnode = document.createTextNode(jsonResponse['description']);
+                    liItem.appendChild(textnode);
                     document.getElementById('error').className = 'hidden';
                     document.getElementById('description').value = '';
+
+                    //qui faccio un azzardo pazzesco
+
+
                 })
                 .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
                     document.getElementById('error').className = '';

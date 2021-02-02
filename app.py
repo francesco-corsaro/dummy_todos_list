@@ -46,6 +46,7 @@ def create_todo():
         
         body['description']= new_raw.description # data la modalità try-except-finally che prevede la chiusura della session
                                                  # assegnamo il valore ad una variabile in questo caso body
+        
     except: #in caso di errore lo gestiamo
         error= True
         db.session.rollback()  # ci permete di evitare che dati in sospeso vengano inseriti
@@ -55,6 +56,12 @@ def create_todo():
     if error:
         abort(400)
     else:
+        # questa è una prova che tenta di recuperare l'id 
+        id_new_raw = Todo.query.filter(Todo.description==description).first()
+        print(id_new_raw.id)
+        body['id']=id_new_raw.id
+        
+        
         return jsonify(body) # questo è l'oggetto json 
 
 ### NEW prendiamo la variabile completato dalla view e aggiorniamo il nostro database ###
