@@ -70,61 +70,101 @@
                         // prima lofacevano con il file python adesso gestiamo tutto dal client
                         console.log(jsonResponse);
                         const liItem = document.createElement('LI'); // step1: creaimo un elemento <li> da aggiungere alla lista
+                        liItem.id = jsonResponse['id'];
                         //costruzione della check box RIUSCITA
                         var inputCheckBox = document.createElement('input');
                         inputCheckBox.setAttribute("type", "checkbox");
                         inputCheckBox.dataset.id = jsonResponse['id'];
                         inputCheckBox.className = 'check-completed'
 
+                        //bottone delete
+                        var btnDel = document.createElement('button');
+                        btnDel.className = 'del_btn'
+                        btnDel.dataset.id = jsonResponse['id'];
+                        btnDel.innerHTML = '&times;'
+
                         // step2: definiamo il valore da stampare sul <li>
                         document.getElementById('todos').appendChild(liItem); //step3: aggiungiamo il valore alla lista
                         liItem.appendChild(inputCheckBox);
                         var textnode = document.createTextNode(jsonResponse['description']);
                         liItem.appendChild(textnode);
+                        liItem.appendChild(btnDel);
                         document.getElementById('error').className = 'hidden';
                         document.getElementById('description').value = '';
 
-                        //qui faccio un azzardo pazzesco
-
-
                     })
-                    .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
-                        document.getElementById('error').className = '';
-                    })
-            }
-            /// il seguente script invia lo stato di checked al database se
-            /// l'utente spunta la casella'
-        const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
-        for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
-            const checkbox = checkboxes[i]; // qui definiamo la variabile
-            checkbox.onchange = function(e) {
-                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
-                const newCompleted = e.target.checked; // dalla console del browswer abbiamo visto che quando si clicca sulla caseela di controllo
-                // al metodo checked viene assegnato true mentre quando viene deselezionata gli viene assegnato il valore false
+                    .then(function() {
+                        /// il seguente script invia lo stato di checked al database se
+                        /// l'utente spunta la casella'
+                        const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
+                        for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
+                            const checkbox = checkboxes[i]; // qui definiamo la variabile
+                            checkbox.onchange = function(e) {
+                                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
+                                const newCompleted = e.target.checked; // dalla console del browswer abbiamo visto che quando si clicca sulla caseela di controllo
+                                // al metodo checked viene assegnato true mentre quando viene deselezionata gli viene assegnato il valore false
 
-                const todoId = e.target.dataset['id']; // prendiamo il valore dell'id della riga da cambiare
+                                const todoId = e.target.dataset['id']; // prendiamo il valore dell'id della riga da cambiare
 
-                fetch('/todos/' + todoId + '/set-completed', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
-                        method: 'POST',
-                        body: JSON.stringify({
-                            'completed': newCompleted, // questa volta inviamo il valore di true o false per l'item della lista
+                                fetch('/todos/' + todoId + '/set-completed', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                            'completed': newCompleted, // questa volta inviamo il valore di true o false per l'item della lista
 
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json'
+                                        }),
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        }
+                                    })
+                                    .then(function() {
+                                        document.getElementById('error').className = 'hidden';
+                                    })
+
+                                .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                                    document.getElementById('error').className = '';
+                                })
+
+                            }
+
                         }
                     })
                     .then(function() {
-                        document.getElementById('error').className = 'hidden';
+                        // di seguito lo script per cancellare gli item dalla lista
+                        const delBoxes = document.querySelectorAll('.del_btn'); // abbimao aggiunto una classe css per poter selezionare le check-box
+                        for (let i = 0; i < delBoxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
+                            const delBox = delBoxes[i]; // qui definiamo la variabile
+                            delBox.onclick = function(e) {
+                                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
+                                const deletedItem = e.target.dataset['id'];
+                                //console.log(newCompleted) // un print giusto per vedere che gli stiamo assegnando
+
+                                fetch('/todos/item_del', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                            'deletedItem': deletedItem, // questa volta inviamo il valore dell'id dell'item da cancellare
+
+                                        }),
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        }
+                                    })
+                                    .then(function() {
+                                        document.getElementById('error').className = 'hidden';
+                                        document.getElementById(deletedItem).remove();
+                                    })
+                                    .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                                        document.getElementById('error').className = '';
+                                    })
+
+                            }
+
+                        }
                     })
                     .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
                         document.getElementById('error').className = '';
                     })
-
             }
-
-        }
-        // di seguito lo script per cancella gli item dalla lista
+            // di seguito lo script per cancella gli item dalla lista
         const delBoxes = document.querySelectorAll('.del_btn'); // abbimao aggiunto una classe css per poter selezionare le check-box
         for (let i = 0; i < delBoxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
             const delBox = delBoxes[i]; // qui definiamo la variabile
@@ -132,8 +172,6 @@
                 console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
                 const deletedItem = e.target.dataset['id'];
                 //console.log(newCompleted) // un print giusto per vedere che gli stiamo assegnando
-
-
 
                 fetch('/todos/item_del', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
                         method: 'POST',
