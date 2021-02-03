@@ -91,8 +91,24 @@ def updat_completed(todo_id):
         db.session.close()
     
     return redirect(url_for('index'))
+### QUI METTO LA FUNZIONE PER CANCELLARE L'ITEM DESIDERATO ###
+@app.route("/todos/item_del", methods=['POST'])
 
+def delete_item():
+    try:
+        deleted= request.get_json()['deletedItem']
+        Todo.query.filter(Todo.id==deleted).delete()
 
+        db.session.commit()
+    except: #in caso di errore lo gestiamo
+        
+        db.session.rollback()  # ci permete di evitare che dati in sospeso vengano inseriti
+        
+    finally: # nel finally chiudiamo la sessione
+        db.session.close()
+    
+    return redirect(url_for('index'))
+    
 @app.route("/")
 def index():
     # qui utiliziamo render_template in modo che gli utenti visulizzino
