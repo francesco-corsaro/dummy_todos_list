@@ -1,13 +1,12 @@
 # Questo file è l'evoluzione dei file precedenti
-# questa volta styudiamo in concetto di relazione tra le tabelle
-# prima avevamo una sola tabella con le cosa da fare adesso impostiamo
-# una nuova tabella genitore che contiene il titolo della categoria delle cose da fare
-# Per esempio in una tabella mettima "spesa" nella tabella figlio mettiamo gli articoli da comprare
-# nella tabella genitore mettimao "palestra" e nella figlio gli esercizi da fare
+# questa vollta aggiungiamo le migrazioni
+# Le migrazionici permettono l'upgrade, il downgrade e la crazione di migrazioni
+# Le migrazioni servono e versionare il nostro database senza perdere dati 
+# e il lavoro da fare è più snello e si gestisce meglio
 from flask import Flask,render_template, request, redirect, url_for, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 import sys # libreria per gestire gli errori
-
+##NEW aggiungiamo la libreria Flask-Migrate 
 from flask_migrate import Migrate
 
 
@@ -17,41 +16,21 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+## NEW dopo aver definito app e db, definiamo migrate
+#      che è uguale alla nostra app di flaske al database di SQLAlchemy
 migrate= Migrate(app,db)
-## Qui stiamo definendo le nostre tabelle 
-# tabella genitore
 
 
-class Todo_title(db.Model):
-    __tablename__= 'todos_titles'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(), nullable=False)
-    # qui definiamo la relazione con la tabella figlia
-    todos= db.relationship('Tododb ', backref='todos_titles', lazy=True)
-    # 1) chiamiamo la variabile con il nome della classe figlio
-    # 2) utiliziamo la parola chiave db.relationship per dire a sqlAlchemy della ralazione
-    # 3) tra virgolette inseriamo il nome della tabella figlio 
-    # 4) impostimao una variabile denominata 'backref' e gli assegnamo il nome della tabella genitore
-    # 5) è possibile impostare differenti opzioni facoltative 
-
-    def __repr__(self):
-        return "<Person ID: {}, title: {}>".format(self.id,self.title)
-
-# Qua definiamo la tabella figlio, quasta tabella contiene le cose da fare di una determinata categoria
-# infatti avra un vincolo con la tabella genitore. 
-# Impostiamo una colonna per la chiave esterna che corrisponde all'id della tabella genitore
 class Todo(db.Model):
     __tablename__= 'todos'
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
-    # qui impostiamo la chiave esterna
-    todo_title_id= db.Column(db.Integer, db.ForeignKey('todos_titles.id'), nullable=False)
 
     def __repr__(self):
         return "<Person ID: {}, description: {}>".format(self.id,self.description)
 
-# db.create_all()  ## non abbiamo piùbisogno di questa funzione
+# db.create_all()  ## NEW non abbiamo piùbisogno di questa funzione
 
 @app.route('/todos/create', methods=['POST'])
 
@@ -86,7 +65,7 @@ def create_todo():
         
         return jsonify(body) # questo è l'oggetto json 
 
-###  prendiamo la variabile completato dalla view e aggiorniamo il nostro database ###
+### NEW prendiamo la variabile completato dalla view e aggiorniamo il nostro database ###
 
 @app.route('/todos/<todo_id>/set-completed', methods=['POST']) # faccio una chiamata al percorso interessato. Da notare che todo_id è fra <>.
                                                                # questo perchè è una variabile che passimao dal file index al file app

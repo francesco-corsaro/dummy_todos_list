@@ -1,0 +1,11 @@
+app.config['SQLALCHEMY_DATABASE_URI']= 'postgres://postgres:123456@localhost:5432/todoapp'
+
+
+class Todo_title(db.Model):
+    __tablename__= 'todos_titles'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(), nullable=False)
+    todos= rela
+
+    def __repr__(self):
+        return "<Person ID: {}, description: {}>".format(self.id,self.description)
