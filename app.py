@@ -170,8 +170,11 @@ def delete_item():
 @app.route("/list/<todo_title_id>") 
 def get_todos_categorized(todo_title_id ):
     # rispetto alla funzione index del file precendete, 
-    # questa volta stiamo passando la variabile list_id per filtrare i risultati da stampare a video    
-    return render_template('index.html', data = Todo.query.filter_by(todo_title_id =todo_title_id ).order_by('id').all())
+    # questa volta stiamo passando la variabile list_id per filtrare i risultati da stampare a video
+    # in più aggiungiamo la variabile lists che preleva i dati dalla tabella todos_title    
+    return render_template('index.html',
+    lists=Todo_title.query.all(),
+    data = Todo.query.filter_by(todo_title_id =todo_title_id ).order_by('id').all())
 
 
 

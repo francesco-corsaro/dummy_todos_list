@@ -15,11 +15,29 @@
             display: none;
         }
         
-        ul {
-            list-style: none;
+        .list-wrapper {
+            background-color: rgba(237, 118, 014, 0.12);
+        }
+        
+        .todos-wrapper {
+            background-color: rgba(255, 118, 014, 0.12);
+        }
+        
+        .list-wrapper,
+        .todos-wrapper {
+            display: inline-block;
             padding: 6px;
             margin: 6px;
-            width: 200px;
+            width: 400px;
+            vertical-align: top;
+        }
+        
+        .list-wrapper {
+            background-color: rgba(148, 156, 123, 0.12);
+        }
+        
+        ul {
+            list-style: none;
         }
         
         li {
@@ -46,16 +64,32 @@
 
 <body>
     <h1>TO-DO List</h1>
-    <form id="form">
-        <label for="description>">Insert a description</label>
-        <input type="text" name="description" id="description">
-        <input type="submit" value="Insert">
-    </form>
-    <!-- inseriamo un messaggio di errore nel caso in cui
+
+    <div class="list-wrapper">
+        <form id="formList">
+
+            <input type="text" name="category" id="category" placeholder="Add new category">
+            <input type="submit" value="Insert">
+        </form>
+        <ul>
+            {% for it in lists %}
+            <li>
+                <a href="/list/{{ it.id }}">{{ it.title }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="todos-wrapper">
+        <form id="form">
+
+            <input type="text" name="description" id="description" placeholder="Add new TODO">
+            <input type="submit" value="Insert">
+        </form>
+        <!-- inseriamo un messaggio di errore nel caso in cui
          non la chiamta ajax non risulti-->
-    <div id="error" class="hidden">Something was wrong!</div>
-    <ul id="todos">
-        <!-- qui stiamo utilizzando un ciclo for con jinja
+        <div id="error" class="hidden">Something was wrong!</div>
+        <ul id="todos">
+            <!-- qui stiamo utilizzando un ciclo for con jinja
              rispetto all'ultima versoine abbiamo aggiunto una condizione if con jinja
              la sintassi prevede che nelle dichiarazioni (eg. for, if ecc..) si utilizza
              [graffaPercentuale ] per indicare la fine del loop si usa la parola chiave 'end' attaccata 
@@ -66,13 +100,14 @@
              ma viene stamapata a video solo se la condizine dell'if è vera.
              Inmaniera ciclica viene inserito un attributo data-id che contiene il valore id dell'item al quale si riferisce
              questo ci serve in modo da ottenere l'id dell'item nell'app.py  da aggiornare-->
-        {% for d in data %}
-        <li id="{{d.id}}">
-            <input type="checkbox" class="check-completed" data-id="{{d.id}}" {% if d.completed %} checked {% endif %} />{{d.description}}
-            <button class="del_btn" data-id="{{d.id}}">&cross;</button>
-        </li>
-        {% endfor %}
-    </ul>
+            {% for d in data %}
+            <li id="{{d.id}}">
+                <input type="checkbox" class="check-completed" data-id="{{d.id}}" {% if d.completed %} checked {% endif %} />{{d.description}}
+                <button class="del_btn" data-id="{{d.id}}">&cross;</button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
     <script>
         /// di seguito abbiamo lo script per inviare nel databse e ricevere dal databse un nuovo item ///
         document.getElementById('form').onsubmit = function(e) {
@@ -214,6 +249,40 @@
                     .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
                         document.getElementById('error').className = '';
                     })
+
+            }
+
+        }
+
+        /// il seguente script invia lo stato di checked al database se
+        /// l'utente spunta la casella'
+        const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
+        for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
+            const checkbox = checkboxes[i]; // qui definiamo la variabile
+            checkbox.onchange = function(e) {
+                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
+                const newCompleted = e.target.checked; // dalla console del browswer abbiamo visto che quando si clicca sulla caseela di controllo
+                // al metodo checked viene assegnato true mentre quando viene deselezionata gli viene assegnato il valore false
+
+                const todoId = e.target.dataset['id']; // prendiamo il valore dell'id della riga da cambiare
+
+                fetch('/todos/' + todoId + '/set-completed', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
+                        method: 'POST',
+                        body: JSON.stringify({
+                            'completed': newCompleted, // questa volta inviamo il valore di true o false per l'item della lista
+
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(function() {
+                        document.getElementById('error').className = 'hidden';
+                    })
+
+                .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                    document.getElementById('error').className = '';
+                })
 
             }
 
