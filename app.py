@@ -1,9 +1,37 @@
 # Questo file è l'evoluzione dei file precedenti
-# questa volta styudiamo in concetto di relazione tra le tabelle
-# prima avevamo una sola tabella con le cosa da fare adesso impostiamo
-# una nuova tabella genitore che contiene il titolo della categoria delle cose da fare
-# Per esempio in una tabella mettima "spesa" nella tabella figlio mettiamo gli articoli da comprare
-# nella tabella genitore mettimao "palestra" e nella figlio gli esercizi da fare
+# continuaimo la lezione sulle relazioni fra le tabelle e quesa volta
+# analizzeremo in dettaglio come fare in modo che l'utnete visualizzi le 
+# 'cose da fare' riferite a una determinata categoria.
+# 
+# Il database è formato da due tabelle:
+#  TABELLA GENITORE: >todos_titles 
+#       in questa tablla salviamo il nome della categoria (eg. spesa, al momento abbiamo inserito solo 'uncategorized')
+#       e il suo id. Il valore Id è la chiave primaria
+###################### OUTPUT psql# \d todo_titles
+######                                 Table "public.todos_titles"
+#    Column |       Type        | Collation | Nullable |                 Default                  
+#    --------+-------------------+-----------+----------+------------------------------------------
+#    id     | integer           |           | not null | nextval('todos_titles_id_seq'::regclass)
+#    title  | character varying |           | not null | 
+#    Indexes:
+#        "todos_titles_pkey" PRIMARY KEY, btree (id)
+#    Referenced by:
+#        TABLE "todos" CONSTRAINT "todos_todo_title_id_fkey" FOREIGN KEY (todo_title_id) REFERENCES todos_titles(id)
+
+#   QUESTA È  LA TABELLA FIGLIO
+#                                     Table "public.todos"
+#    Column     |       Type        | Collation | Nullable |              Default              
+#---------------+-------------------+-----------+----------+-----------------------------------
+# id            | integer           |           | not null | nextval('todos_id_seq'::regclass)
+# description   | character varying |           | not null | 
+# completed     | boolean           |           | not null | 
+# todo_title_id | integer           |           | not null | 
+#Indexes:
+#    "todos_pkey" PRIMARY KEY, btree (id)
+#Foreign-key constraints:
+#    "todos_todo_title_id_fkey" FOREIGN KEY (todo_title_id) REFERENCES todos_titles(id)
+
+
 from flask import Flask,render_template, request, redirect, url_for, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 import sys # libreria per gestire gli errori
@@ -27,7 +55,7 @@ class Todo_title(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(), nullable=False)
     # qui definiamo la relazione con la tabella figlia
-    todos= db.relationship('Tododb ', backref='todos_titles', lazy=True)
+    todos= db.relationship('Todo', backref='todos_titles', lazy=True)
     # 1) chiamiamo la variabile con il nome della classe figlio
     # 2) utiliziamo la parola chiave db.relationship per dire a sqlAlchemy della ralazione
     # 3) tra virgolette inseriamo il nome della tabella figlio 
@@ -130,12 +158,28 @@ def delete_item():
         db.session.close()
     
     return redirect(url_for('index'))
-    
+
+######### NEW ##########
+# l'obbiettivo è far visualizzare all'utnete il file index.html con i dati estratti in base al  todo_title_id 
+# che rappresenta il nostro vincolo id relazione. la funzione sarà
+# simile alla funzione index precedente però in questa insirmao una variabile che ci permette di selezionare 
+# quale categoria di 'cose da fare' devono esere visualizzate 
+
+# per prima cosa definiamo un path e una variabile che ci consete 
+# di selezionare la categoria delle 'cose da fare'
+@app.route("/list/<todo_title_id>") 
+def get_todos_categorized(todo_title_id ):
+    # rispetto alla funzione index del file precendete, 
+    # questa volta stiamo passando la variabile list_id per filtrare i risultati da stampare a video    
+    return render_template('index.html', data = Todo.query.filter_by(todo_title_id =todo_title_id ).order_by('id').all())
+
+
+
 @app.route("/")
 def index():
-    # qui utiliziamo render_template in modo che gli utenti visulizzino
-    # la pagina html (in questo caso) desiderata
-    return render_template('index.html', data = Todo.query.order_by('id').all())
+    # dato che il metodo render_template viene utilizzato per la funzione get_todos_categorized
+    # qui facciamo un redirect alla funzione di rendering e passiamo come argomento todos_list il valore 1
+    return redirect(url_for('get_todos_categorized', todo_title_id =1))
 
 if __name__ == '__main__':
     app.run()
