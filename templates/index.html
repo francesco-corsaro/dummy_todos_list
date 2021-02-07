@@ -254,19 +254,27 @@
 
         }
 
+
         /// il seguente script invia lo stato di checked al database se
         /// l'utente spunta la casella'
         const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
         for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
             const checkbox = checkboxes[i]; // qui definiamo la variabile
-            checkbox.onchange = function(e) {
+            checkbox.addEventListener('change', function(e) {
+                    handlerAddDel.checkedItem(e, 'set-completed');
+                }
+
+            );
+        }
+        var handlerAddDel = {
+            checkedItem: function(e, whereRoot) {
                 console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
                 const newCompleted = e.target.checked; // dalla console del browswer abbiamo visto che quando si clicca sulla caseela di controllo
                 // al metodo checked viene assegnato true mentre quando viene deselezionata gli viene assegnato il valore false
 
                 const todoId = e.target.dataset['id']; // prendiamo il valore dell'id della riga da cambiare
 
-                fetch('/todos/' + todoId + '/set-completed', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
+                fetch('/todos/' + todoId + '/' + whereRoot, { // qui imposto la root per app.py
                         method: 'POST',
                         body: JSON.stringify({
                             'completed': newCompleted, // questa volta inviamo il valore di true o false per l'item della lista
@@ -285,7 +293,6 @@
                 })
 
             }
-
         }
     </script>
 </body>
