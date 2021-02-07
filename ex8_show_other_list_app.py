@@ -89,10 +89,8 @@ def create_todo():
     body={}
     try:
         description =  request.get_json()['description'] # questo prende i dati dal client
-         
+        todo_id= request.get_json()['todo_title_id'] 
         new_raw = Todo(description= description) # questa è la procedura per inserire i dati nel database
-        # sotto impostiamo la categoria di appartenenza dell'item
-        todo_id= request.get_json()['todo_title_id']
         new_raw.todo_title_id=todo_id
         db.session.add(new_raw)
         db.session.commit()
@@ -116,7 +114,7 @@ def create_todo():
         
         
         return jsonify(body) # questo è l'oggetto json 
-
+### NEW FUNCTION TO CREATE NEW CATEGORY ###
 
 ###  prendiamo la variabile completato dalla view e aggiorniamo il nostro database ###
 
@@ -181,29 +179,7 @@ def get_todos_categorized(todo_title_id ):
     active_category = Todo_title.query.get(todo_title_id),
     data = Todo.query.filter_by(todo_title_id =todo_title_id ).order_by('id').all())
 
-### NEW FUNCTION TO CREATE NEW CATEGORY ###
-@app.route('/todos_titles/create', methods=['POST'])
 
-def create_todos_titles():
-    error= False
-    body={}
-    try:
-        title=request.get_json()['title'] #prendo il nome della nuova dal client
-        new_raw= Todo_title(title=title)
-        db.session.add(new_raw)
-        db.session.commit()
-        body['title']=new_raw.title
-        body['id']=new_raw.id
-    except:
-        error= True
-        db.session.rollback()  # ci permete di evitare che dati in sospeso vengano inseriti
-        print(sys.exc_info())
-    finally: # nel finally chiudiamo la sessione
-        db.session.close()
-    if error:
-        abort(400)
-    else:
-        return jsonify(body)
 
 @app.route("/")
 def index():

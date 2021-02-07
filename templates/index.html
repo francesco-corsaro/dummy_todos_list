@@ -74,7 +74,7 @@
             <input type="submit" value="Insert">
 
         </form>
-        <ul>
+        <ul id="todosCategory">
             {% for it in lists %}
             <li>
                 <a href="/list/{{ it.id }}">{{ it.title }}</a>
@@ -112,9 +112,6 @@
         </ul>
     </div>
     <script>
-        document.getElementById('description').addEventListener('focusout', function(e) {
-            console.log('event', e);
-        });
         /// di seguito abbiamo lo script per inviare nel databse e ricevere dal databse un nuovo item ///
         document.getElementById('form').onsubmit = function(e) {
                 e.preventDefault(); //questo non fa ricaricare la pagina cheè il comportamento di default
@@ -275,6 +272,54 @@
                 })
 
             }
+        }
+
+        document.getElementById('formList').onsubmit = function(e) {
+            e.preventDefault(); //questo non fa ricaricare la pagina cheè il comportamento di default
+            fetch('/todos_titles/create', {
+                    method: 'POST', // qui abbiamo definito la route e il method che nel file precedente si trovavano all' interno del tag <form>
+                    body: JSON.stringify({
+                        'title': document.getElementById('category').value, //nel corpo definiamo la variabile che voliamo passare
+
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json' //qui semplicemente definiamo l'headers per dirgli che il file è json
+                    }
+                })
+                .then(function(response) {
+                    return response.json(); // qui recuperiamo la risposta inizialmente come stringa che diventa json
+                })
+                .then(function(jsonResponse) {
+                    // qua inizia l'handler per manipolare le risposte del server
+                    // prima lofacevano con il file python adesso gestiamo tutto dal client
+                    console.log(jsonResponse);
+                    const liItem = document.createElement('LI'); // step1: creaimo un elemento <li> da aggiungere alla lista
+                    liItem.id = jsonResponse['id'];
+                    //costruzione della check box RIUSCITA
+                    var inputCheckBox = document.createElement('input');
+                    inputCheckBox.setAttribute("type", "checkbox");
+                    inputCheckBox.dataset.id = jsonResponse['id'];
+                    inputCheckBox.className = 'check-completed'
+
+                    //bottone delete
+                    var btnDel = document.createElement('button');
+                    btnDel.className = 'del_btn'
+                    btnDel.dataset.id = jsonResponse['id'];
+                    btnDel.innerHTML = '&cross;'
+
+                    // step2: definiamo il valore da stampare sul <li>
+                    document.getElementById('todosCategory').appendChild(liItem); //step3: aggiungiamo il valore alla lista
+                    liItem.appendChild(inputCheckBox);
+                    var textnode = document.createTextNode(jsonResponse['title']);
+                    liItem.appendChild(textnode);
+                    liItem.appendChild(btnDel);
+                    document.getElementById('error').className = 'hidden';
+                    document.getElementById('description').value = '';
+
+                })
+                .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                    document.getElementById('error').className = '';
+                })
         }
     </script>
 </body>
