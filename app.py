@@ -89,8 +89,9 @@ def create_todo():
     body={}
     try:
         description =  request.get_json()['description'] # questo prende i dati dal client
-       
+        todo_id= request.get_json()['todo_title_id'] 
         new_raw = Todo(description= description) # questa è la procedura per inserire i dati nel database
+        new_raw.todo_title_id=todo_id
         db.session.add(new_raw)
         db.session.commit()
         
@@ -174,6 +175,7 @@ def get_todos_categorized(todo_title_id ):
     # in più aggiungiamo la variabile lists che preleva i dati dalla tabella todos_title    
     return render_template('index.html',
     lists=Todo_title.query.all(),
+    active_category = Todo_title.query.get(todo_title_id),
     data = Todo.query.filter_by(todo_title_id =todo_title_id ).order_by('id').all())
 
 

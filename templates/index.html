@@ -30,6 +30,7 @@
             margin: 6px;
             width: 400px;
             vertical-align: top;
+            text-align: center;
         }
         
         .list-wrapper {
@@ -69,7 +70,9 @@
         <form id="formList">
 
             <input type="text" name="category" id="category" placeholder="Add new category">
+
             <input type="submit" value="Insert">
+
         </form>
         <ul>
             {% for it in lists %}
@@ -81,8 +84,8 @@
     </div>
     <div class="todos-wrapper">
         <form id="form">
-
-            <input type="text" name="description" id="description" placeholder="Add new TODO">
+            <h4>{{ active_category.title }}</h4>
+            <input type="text" name="description" id="description" placeholder="Add new TODO" data-category='{{ active_category.id}}'>
             <input type="submit" value="Insert">
         </form>
         <!-- inseriamo un messaggio di errore nel caso in cui
@@ -109,13 +112,17 @@
         </ul>
     </div>
     <script>
+        document.getElementById('description').addEventListener('focusout', function(e) {
+            console.log('event', e);
+        });
         /// di seguito abbiamo lo script per inviare nel databse e ricevere dal databse un nuovo item ///
         document.getElementById('form').onsubmit = function(e) {
                 e.preventDefault(); //questo non fa ricaricare la pagina cheè il comportamento di default
                 fetch('/todos/create', {
                         method: 'POST', // qui abbiamo definito la route e il method che nel file precedente si trovavano all' interno del tag <form>
                         body: JSON.stringify({
-                            'description': document.getElementById('description').value //nel corpo definiamo la variabile che voliamo passare
+                            'description': document.getElementById('description').value, //nel corpo definiamo la variabile che voliamo passare
+                            'todo_title_id': document.getElementById('description').dataset.category
                         }),
                         headers: {
                             'Content-Type': 'application/json' //qui semplicemente definiamo l'headers per dirgli che il file è json
@@ -158,32 +165,9 @@
                         const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
                         for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
                             const checkbox = checkboxes[i]; // qui definiamo la variabile
-                            checkbox.onchange = function(e) {
-                                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
-                                const newCompleted = e.target.checked; // dalla console del browswer abbiamo visto che quando si clicca sulla caseela di controllo
-                                // al metodo checked viene assegnato true mentre quando viene deselezionata gli viene assegnato il valore false
-
-                                const todoId = e.target.dataset['id']; // prendiamo il valore dell'id della riga da cambiare
-
-                                fetch('/todos/' + todoId + '/set-completed', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
-                                        method: 'POST',
-                                        body: JSON.stringify({
-                                            'completed': newCompleted, // questa volta inviamo il valore di true o false per l'item della lista
-
-                                        }),
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        }
-                                    })
-                                    .then(function() {
-                                        document.getElementById('error').className = 'hidden';
-                                    })
-
-                                .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
-                                    document.getElementById('error').className = '';
-                                })
-
-                            }
+                            checkbox.addEventListener('change', function(e) {
+                                handlerAddDel.checkedItem(e, 'set-completed');
+                            });
 
                         }
                     })
@@ -261,10 +245,8 @@
         for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
             const checkbox = checkboxes[i]; // qui definiamo la variabile
             checkbox.addEventListener('change', function(e) {
-                    handlerAddDel.checkedItem(e, 'set-completed');
-                }
-
-            );
+                handlerAddDel.checkedItem(e, 'set-completed');
+            });
         }
         var handlerAddDel = {
             checkedItem: function(e, whereRoot) {
