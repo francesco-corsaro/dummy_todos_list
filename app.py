@@ -203,13 +203,14 @@ def create_todos_titles():
     if error:
         abort(400)
     else:
+        
         return jsonify(body)
 
 @app.route("/")
 def index():
     # dato che il metodo render_template viene utilizzato per la funzione get_todos_categorized
     # qui facciamo un redirect alla funzione di rendering e passiamo come argomento todos_list il valore 1
-    return redirect(url_for('get_todos_categorized', todo_title_id =1))
+    return redirect(url_for('get_todos_categorized', todo_title_id=1))
 
 if __name__ == '__main__':
     app.run()

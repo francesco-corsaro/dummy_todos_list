@@ -77,7 +77,7 @@
         <ul id="todosCategory">
             {% for it in lists %}
             <li>
-                <a href="/list/{{ it.id }}">{{ it.title }}</a>
+                <input type="checkbox" class="checkTodosTitlesCompleted"><a href="/list/{{ it.id }}">{{ it.title }}</a>
             </li>
             {% endfor %}
         </ul>
@@ -157,8 +157,8 @@
 
                     })
                     .then(function() {
-                        /// il seguente script invia lo stato di checked al database se
-                        /// l'utente spunta la casella'
+                        /// this script send a status true or false if
+                        /// user check the box just created
                         const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
                         for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
                             const checkbox = checkboxes[i]; // qui definiamo la variabile
@@ -236,44 +236,47 @@
         }
 
 
-        /// il seguente script invia lo stato di checked al database se
-        /// l'utente spunta la casella'
+        // this script works only with existing element and
+        // doesn't work with new item
         const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
         for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
-            const checkbox = checkboxes[i]; // qui definiamo la variabile
+            const checkbox = checkboxes[i];
+            //with the following function we pass the status of checked or unchecked
             checkbox.addEventListener('change', function(e) {
                 handlerAddDel.checkedItem(e, 'set-completed');
             });
         }
+
+        // With this object we can pass the status of 'checked' to an Item 
         var handlerAddDel = {
-            checkedItem: function(e, whereRoot) {
-                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
-                const newCompleted = e.target.checked; // dalla console del browswer abbiamo visto che quando si clicca sulla caseela di controllo
-                // al metodo checked viene assegnato true mentre quando viene deselezionata gli viene assegnato il valore false
+                checkedItem: function(e, whereRoot) {
+                    console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
+                    const newCompleted = e.target.checked; // dalla console del browswer abbiamo visto che quando si clicca sulla caseela di controllo
+                    // al metodo checked viene assegnato true mentre quando viene deselezionata gli viene assegnato il valore false
 
-                const todoId = e.target.dataset['id']; // prendiamo il valore dell'id della riga da cambiare
+                    const todoId = e.target.dataset['id']; // prendiamo il valore dell'id della riga da cambiare
 
-                fetch('/todos/' + todoId + '/' + whereRoot, { // qui imposto la root per app.py
-                        method: 'POST',
-                        body: JSON.stringify({
-                            'completed': newCompleted, // questa volta inviamo il valore di true o false per l'item della lista
+                    fetch('/todos/' + todoId + '/' + whereRoot, { // qui imposto la root per app.py
+                            method: 'POST',
+                            body: JSON.stringify({
+                                'completed': newCompleted, // questa volta inviamo il valore di true o false per l'item della lista
 
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
+                            }),
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(function() {
+                            document.getElementById('error').className = 'hidden';
+                        })
+
+                    .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                        document.getElementById('error').className = '';
                     })
-                    .then(function() {
-                        document.getElementById('error').className = 'hidden';
-                    })
 
-                .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
-                    document.getElementById('error').className = '';
-                })
-
+                }
             }
-        }
-
+            //  with this script we add a new title category
         document.getElementById('formList').onsubmit = function(e) {
             e.preventDefault(); //questo non fa ricaricare la pagina cheè il comportamento di default
             fetch('/todos_titles/create', {
