@@ -50,7 +50,8 @@
             text-align: left;
         }
         
-        .del_btn {
+        .del_btn,
+        .delCategory_btn {
             -webkit-appearance: none;
             border: none;
             outline: none;
@@ -78,7 +79,9 @@
         <ul id="todosCategory">
             {% for it in lists %}
             <li>
-                <input type="checkbox" class="checkTodosTitlesCompleted" data-id="{{ it.id }}"><a href="/list/{{ it.id }}">{{ it.title }}</a>
+                <input type="checkbox" class="checkTodosTitlesCompleted" data-id="{{ it.id }}">
+                <a href="/list/{{ it.id }}">{{ it.title }}</a>
+                <button class="delCategory_btn" data-id="{{it.id}}">&cross;</button>
             </li>
             {% endfor %}
         </ul>
@@ -275,6 +278,30 @@
                         document.getElementById('error').className = '';
                     })
 
+                },
+                delItem: function(e, whereRoot) {
+                    console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
+                    const deletedItem = e.target.dataset['id'];
+                    //console.log(newCompleted) // un print giusto per vedere che gli stiamo assegnando
+
+                    fetch('/todos/' + whereRoot, { // qui faccimao un classico invio di dati con il metodo fetch di ajax
+                            method: 'POST',
+                            body: JSON.stringify({
+                                'deletedItem': deletedItem, // questa volta inviamo il valore dell'id dell'item da cancellare
+
+                            }),
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(function() {
+                            document.getElementById('error').className = 'hidden';
+                            document.getElementById(deletedItem).remove();
+                        })
+                        .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                            document.getElementById('error').className = '';
+                        })
+
                 }
             }
             //  with this script we add a new title category
@@ -346,11 +373,21 @@
 
         // with the following function we change the checked status
         function checkedItems() {
-            var checkBoxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
+            var checkBoxes = document.querySelectorAll('.check-completed');
             for (let i = 0; i < checkboxes.length; i++) {
                 checkbox = checkboxes[i];
+                // the following sign checked the items
                 checkbox.checked = true;
+
             }
+        }
+        //with this function we deletethe category list
+        const delCategoryBoxes = document.querySelectorAll('.delCategory_btn'); // abbimao aggiunto una classe css per poter selezionare le check-box
+        for (let i = 0; i < delCategoryBoxes.length; i++) {
+            delCategoryBox = delCategoryBoxes[i];
+            delCategoryBox.addEventListener('click', function(e) {
+                handlerAddDel.delItem(e, 'del_category') // app.route => todos/del_category
+            })
         }
     </script>
 </body>

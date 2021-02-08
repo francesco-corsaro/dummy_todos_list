@@ -55,7 +55,7 @@ class Todo_title(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(), nullable=False)
     # qui definiamo la relazione con la tabella figlia
-    todos= db.relationship('Todo', backref='todos_titles', lazy=True)
+    todos= db.relationship('Todo', backref='todos_titles',cascade="all, delete-orphan", lazy=True)
     # 1) chiamiamo la variabile con il nome della classe figlio
     # 2) utiliziamo la parola chiave db.relationship per dire a sqlAlchemy della ralazione
     # 3) tra virgolette inseriamo il nome della tabella figlio 
@@ -227,6 +227,28 @@ def updat_categoryCompleted(todo_id):
         db.session.close()
     
     return redirect(url_for('get_todos_categorized', todo_title_id=todo_id))
+
+
+### function to delete the category and its children ###
+
+@app.route("/todos/del_category", methods=['POST'])
+
+def del_category():
+    try:
+        deleted= request.get_json()['deletedItem']
+        Todo.query.filter(Todo.todo_title_id==deleted).delete()
+        Todo_title.query.filter(Todo_title.id==deleted).delete()
+
+        db.session.commit()
+    except: #in caso di errore lo gestiamo
+        
+        db.session.rollback()  # ci permete di evitare che dati in sospeso vengano inseriti
+        
+    finally: # nel finally chiudiamo la sessione
+        db.session.close()
+    
+    return redirect(url_for('index'))
+    
 
 @app.route("/")
 def index():
