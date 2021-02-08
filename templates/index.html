@@ -47,6 +47,7 @@
             padding: 2px;
             background-color: rgba(126, 234, 123, 0.12);
             border-radius: 15px;
+            text-align: left;
         }
         
         .del_btn {
@@ -77,7 +78,7 @@
         <ul id="todosCategory">
             {% for it in lists %}
             <li>
-                <input type="checkbox" class="checkTodosTitlesCompleted"><a href="/list/{{ it.id }}">{{ it.title }}</a>
+                <input type="checkbox" class="checkTodosTitlesCompleted" data-id="{{ it.id }}"><a href="/list/{{ it.id }}">{{ it.title }}</a>
             </li>
             {% endfor %}
         </ul>
@@ -302,7 +303,7 @@
                     var inputCheckBox = document.createElement('input');
                     inputCheckBox.setAttribute("type", "checkbox");
                     inputCheckBox.dataset.id = jsonResponse['id'];
-                    inputCheckBox.className = 'check-completed'
+                    inputCheckBox.className = 'checkTodosTitlesCompleted'
 
                     //bottone delete
                     var btnDel = document.createElement('button');
@@ -314,7 +315,11 @@
                     document.getElementById('todosCategory').appendChild(liItem); //step3: aggiungiamo il valore alla lista
                     liItem.appendChild(inputCheckBox);
                     var textnode = document.createTextNode(jsonResponse['title']);
-                    liItem.appendChild(textnode);
+                    var a = document.createElement('a');
+                    a.appendChild(textnode);
+                    a.title = textnode;
+                    a.href = '/list/' + jsonResponse['id'];
+                    liItem.appendChild(a);
                     liItem.appendChild(btnDel);
                     document.getElementById('error').className = 'hidden';
                     document.getElementById('description').value = '';
@@ -323,6 +328,29 @@
                 .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
                     document.getElementById('error').className = '';
                 })
+        }
+
+        // her the script to check if the item's list are completed
+        const categoryCheckboxes = document.querySelectorAll('.checkTodosTitlesCompleted'); // abbimao aggiunto una classe css per poter selezionare le check-box
+        for (let i = 0; i < categoryCheckboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
+            const categoryCheckbox = categoryCheckboxes[i];
+            //with the following function we pass the argument e for the event
+            // and the path for app.root
+            categoryCheckbox.addEventListener('change', function(e) {
+                // with this update the model
+                handlerAddDel.checkedItem(e, 'set-categoryCompleted');
+                // with this update the view
+                checkedItems();
+            });
+        }
+
+        // with the following function we change the checked status
+        function checkedItems() {
+            var checkBoxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
+            for (let i = 0; i < checkboxes.length; i++) {
+                checkbox = checkboxes[i];
+                checkbox.checked = true;
+            }
         }
     </script>
 </body>

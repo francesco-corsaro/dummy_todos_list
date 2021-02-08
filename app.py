@@ -206,6 +206,28 @@ def create_todos_titles():
         
         return jsonify(body)
 
+
+#### NEW FUNCTION TO HANDLER COMPLETED CATEGORY ###
+# qui inserisco la funzione per sengare  come completati glialtri item
+@app.route('/todos/<todo_id>/set-categoryCompleted', methods=['POST']) 
+
+def updat_categoryCompleted(todo_id):
+    try:
+        completed= request.get_json()['completed']
+        items_completed= Todo.query.filter_by(todo_title_id=todo_id)
+        for item in  items_completed:
+            item.completed=completed
+        db.session.commit()
+    
+    except: #in caso di errore lo gestiamo
+        
+        db.session.rollback()  # ci permete di evitare che dati in sospeso vengano inseriti
+        
+    finally: # nel finally chiudiamo la sessione
+        db.session.close()
+    
+    return redirect(url_for('get_todos_categorized', todo_title_id=todo_id))
+
 @app.route("/")
 def index():
     # dato che il metodo render_template viene utilizzato per la funzione get_todos_categorized
