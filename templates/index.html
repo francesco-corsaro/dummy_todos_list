@@ -118,124 +118,90 @@
     <script>
         /// di seguito abbiamo lo script per inviare nel databse e ricevere dal databse un nuovo item ///
         document.getElementById('form').onsubmit = function(e) {
-                e.preventDefault(); //questo non fa ricaricare la pagina cheè il comportamento di default
-                fetch('/todos/create', {
-                        method: 'POST', // qui abbiamo definito la route e il method che nel file precedente si trovavano all' interno del tag <form>
-                        body: JSON.stringify({
-                            'description': document.getElementById('description').value, //nel corpo definiamo la variabile che voliamo passare
-                            'todo_title_id': document.getElementById('description').dataset.category
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json' //qui semplicemente definiamo l'headers per dirgli che il file è json
-                        }
-                    })
-                    .then(function(response) {
-                        return response.json(); // qui recuperiamo la risposta inizialmente come stringa che diventa json
-                    })
-                    .then(function(jsonResponse) {
-                        // qua inizia l'handler per manipolare le risposte del server
-                        // prima lofacevano con il file python adesso gestiamo tutto dal client
-                        console.log(jsonResponse);
-                        const liItem = document.createElement('LI'); // step1: creaimo un elemento <li> da aggiungere alla lista
-                        liItem.id = jsonResponse['id'];
-                        //costruzione della check box RIUSCITA
-                        var inputCheckBox = document.createElement('input');
-                        inputCheckBox.setAttribute("type", "checkbox");
-                        inputCheckBox.dataset.id = jsonResponse['id'];
-                        inputCheckBox.className = 'check-completed'
+            e.preventDefault(); //questo non fa ricaricare la pagina cheè il comportamento di default
+            fetch('/todos/create', {
+                    method: 'POST', // qui abbiamo definito la route e il method che nel file precedente si trovavano all' interno del tag <form>
+                    body: JSON.stringify({
+                        'description': document.getElementById('description').value, //nel corpo definiamo la variabile che voliamo passare
+                        'todo_title_id': document.getElementById('description').dataset.category
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json' //qui semplicemente definiamo l'headers per dirgli che il file è json
+                    }
+                })
+                .then(function(response) {
+                    return response.json(); // qui recuperiamo la risposta inizialmente come stringa che diventa json
+                })
+                .then(function(jsonResponse) {
+                    // qua inizia l'handler per manipolare le risposte del server
+                    // prima lofacevano con il file python adesso gestiamo tutto dal client
+                    console.log(jsonResponse);
+                    // step1: create a <li> element to add to the item list
+                    const liItem = document.createElement('LI');
+                    liItem.id = jsonResponse['id'];
 
-                        //bottone delete
-                        var btnDel = document.createElement('button');
-                        btnDel.className = 'del_btn'
-                        btnDel.dataset.id = jsonResponse['id'];
-                        btnDel.innerHTML = '&cross;'
+                    //build a check box 
+                    var inputCheckBox = document.createElement('input');
+                    inputCheckBox.setAttribute("type", "checkbox");
+                    inputCheckBox.dataset.id = jsonResponse['id'];
+                    inputCheckBox.className = 'check-completed'
 
-                        // step2: definiamo il valore da stampare sul <li>
-                        document.getElementById('todos').appendChild(liItem); //step3: aggiungiamo il valore alla lista
-                        liItem.appendChild(inputCheckBox);
-                        var textnode = document.createTextNode(jsonResponse['description']);
-                        liItem.appendChild(textnode);
-                        liItem.appendChild(btnDel);
-                        document.getElementById('error').className = 'hidden';
-                        document.getElementById('description').value = '';
+                    //  build a string to print on <li>
+                    var textnode = document.createTextNode(jsonResponse['description'])
 
-                    })
-                    .then(function() {
-                        /// this script send a status true or false if
-                        /// user check the box just created
-                        const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
-                        for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
-                            const checkbox = checkboxes[i]; // qui definiamo la variabile
-                            checkbox.addEventListener('change', function(e) {
-                                handlerAddDel.checkedItem(e, 'set-completed');
-                            });
+                    //botton delete
+                    var btnDel = document.createElement('button');
+                    btnDel.className = 'del_btn'
+                    btnDel.dataset.id = jsonResponse['id'];
+                    btnDel.innerHTML = '&cross;'
 
-                        }
-                    })
-                    .then(function() {
-                        // di seguito lo script per cancellare gli item dalla lista
-                        const delBoxes = document.querySelectorAll('.del_btn'); // abbimao aggiunto una classe css per poter selezionare le check-box
-                        for (let i = 0; i < delBoxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
-                            const delBox = delBoxes[i]; // qui definiamo la variabile
-                            delBox.onclick = function(e) {
-                                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
-                                const deletedItem = e.target.dataset['id'];
-                                //console.log(newCompleted) // un print giusto per vedere che gli stiamo assegnando
+                    //step3: append the children
+                    document.getElementById('todos').appendChild(liItem);
+                    liItem.appendChild(inputCheckBox);;
+                    liItem.appendChild(textnode);
+                    liItem.appendChild(btnDel);
 
-                                fetch('/todos/item_del', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
-                                        method: 'POST',
-                                        body: JSON.stringify({
-                                            'deletedItem': deletedItem, // questa volta inviamo il valore dell'id dell'item da cancellare
+                    document.getElementById('error').className = 'hidden';
+                    document.getElementById('description').value = '';
 
-                                        }),
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        }
-                                    })
-                                    .then(function() {
-                                        document.getElementById('error').className = 'hidden';
-                                        document.getElementById(deletedItem).remove();
-                                    })
-                                    .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
-                                        document.getElementById('error').className = '';
-                                    })
+                })
+                .then(function() {
+                    // NOW i chaining this function to not reload the page 
+                    // and the user can interact with the news elements
+                    /// this script send a status true or false if
+                    /// user check the box just created
+                    const checkboxes = document.querySelectorAll('.check-completed'); // abbimao aggiunto una classe css per poter selezionare le check-box
+                    for (let i = 0; i < checkboxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
+                        const checkbox = checkboxes[i]; // qui definiamo la variabile
+                        checkbox.addEventListener('change', function(e) {
+                            handlerAddDel.checkedItem(e, 'set-completed');
+                        });
 
-                            }
+                    }
+                })
+                .then(function() {
+                    // di seguito lo script per cancellare gli item dalla lista
+                    // this delete an new element
+                    const delBoxes = document.querySelectorAll('.del_btn'); // abbimao aggiunto una classe css per poter selezionare le check-box
+                    for (let i = 0; i < delBoxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
+                        const delBox = delBoxes[i]; // qui definiamo la variabile
+                        delBox.addEventListener('click', function(e) {
+                            handlerAddDel.delItem(e, 'item_del'); // app.route => todos/item_del
+                        })
+                    }
+                })
+                .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
+                    document.getElementById('error').className = '';
+                })
+        }
 
-                        }
-                    })
-                    .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
-                        document.getElementById('error').className = '';
-                    })
-            }
-            // di seguito lo script per cancella gli item dalla lista
+        // di seguito lo script per cancellare gli item dalla lista
         const delBoxes = document.querySelectorAll('.del_btn'); // abbimao aggiunto una classe css per poter selezionare le check-box
         for (let i = 0; i < delBoxes.length; i++) { //qui facciamo un ciclo per su tutte le check box
             const delBox = delBoxes[i]; // qui definiamo la variabile
-            delBox.onclick = function(e) {
-                console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
-                const deletedItem = e.target.dataset['id'];
-                //console.log(newCompleted) // un print giusto per vedere che gli stiamo assegnando
-
-                fetch('/todos/item_del', { // qui faccimao un classico invio di dati con il metodo fetch di ajax
-                        method: 'POST',
-                        body: JSON.stringify({
-                            'deletedItem': deletedItem, // questa volta inviamo il valore dell'id dell'item da cancellare
-
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(function() {
-                        document.getElementById('error').className = 'hidden';
-                        document.getElementById(deletedItem).remove();
-                    })
-                    .catch(function() { //con questa funzione possiamo visualizzare se qualcosa va storto durante la chiamata ajax fetch()
-                        document.getElementById('error').className = '';
-                    })
-
-            }
+            delBox.addEventListener('click', function(e) {
+                handlerAddDel.delItem(e, 'item_del'); // app.route => todos/item_del
+            })
 
         }
 
@@ -251,7 +217,7 @@
             });
         }
 
-        // With this object we can pass the status of 'checked' to an Item 
+        // this is my handler object to update or delete record
         var handlerAddDel = {
                 checkedItem: function(e, whereRoot) {
                     console.log('evente', e); // questo ci permette di vedere il valore la variabile target e il valore che gli viene impostato
@@ -326,28 +292,31 @@
                     console.log(jsonResponse);
                     const liItem = document.createElement('LI'); // step1: creaimo un elemento <li> da aggiungere alla lista
                     liItem.id = jsonResponse['id'];
-                    //costruzione della check box RIUSCITA
+                    //costruzione della check 
                     var inputCheckBox = document.createElement('input');
                     inputCheckBox.setAttribute("type", "checkbox");
                     inputCheckBox.dataset.id = jsonResponse['id'];
                     inputCheckBox.className = 'checkTodosTitlesCompleted'
 
-                    //bottone delete
+                    //botton delete
                     var btnDel = document.createElement('button');
                     btnDel.className = 'del_btn'
                     btnDel.dataset.id = jsonResponse['id'];
                     btnDel.innerHTML = '&cross;'
 
-                    // step2: definiamo il valore da stampare sul <li>
-                    document.getElementById('todosCategory').appendChild(liItem); //step3: aggiungiamo il valore alla lista
-                    liItem.appendChild(inputCheckBox);
+                    // definiamo il valore da stampare sul <li>
                     var textnode = document.createTextNode(jsonResponse['title']);
                     var a = document.createElement('a');
-                    a.appendChild(textnode);
                     a.title = textnode;
                     a.href = '/list/' + jsonResponse['id'];
+
+                    //step3: append the children
+                    document.getElementById('todosCategory').appendChild(liItem);
+                    liItem.appendChild(inputCheckBox);
+                    a.appendChild(textnode);
                     liItem.appendChild(a);
                     liItem.appendChild(btnDel);
+
                     document.getElementById('error').className = 'hidden';
                     document.getElementById('description').value = '';
 
@@ -386,7 +355,9 @@
         for (let i = 0; i < delCategoryBoxes.length; i++) {
             delCategoryBox = delCategoryBoxes[i];
             delCategoryBox.addEventListener('click', function(e) {
-                handlerAddDel.delItem(e, 'del_category') // app.route => todos/del_category
+                handlerAddDel.delItem(e, 'del_category'); // app.route => todos/del_category
+                window.location.reload(true);
+
             })
         }
     </script>

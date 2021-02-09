@@ -55,7 +55,7 @@ class Todo_title(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(), nullable=False)
     # qui definiamo la relazione con la tabella figlia
-    todos= db.relationship('Todo', backref='todos_titles',cascade="all, delete-orphan", lazy=True)
+    todos= db.relationship('Todo', backref='todos_titles', lazy=True)
     # 1) chiamiamo la variabile con il nome della classe figlio
     # 2) utiliziamo la parola chiave db.relationship per dire a sqlAlchemy della ralazione
     # 3) tra virgolette inseriamo il nome della tabella figlio 
@@ -63,7 +63,7 @@ class Todo_title(db.Model):
     # 5) è possibile impostare differenti opzioni facoltative 
 
     def __repr__(self):
-        return "<Person ID: {}, title: {}>".format(self.id,self.title)
+        return "<todos_titles ID: {}, title: {}>".format(self.id,self.title)
 
 # Qua definiamo la tabella figlio, quasta tabella contiene le cose da fare di una determinata categoria
 # infatti avra un vincolo con la tabella genitore. 
@@ -75,9 +75,14 @@ class Todo(db.Model):
     completed = db.Column(db.Boolean, nullable=False, default=False)
     # qui impostiamo la chiave esterna
     todo_title_id= db.Column(db.Integer, db.ForeignKey('todos_titles.id'), nullable=False)
+    # Lesson by Juliano. é possible utilizzare un 'cascade behaviour' che permette
+    # di cancellare la riga della tabella genitore e a cascata le righe delle tabelle figlio ad esso associate
+    # per fare questo impostiamo sulla tabella figlia una relatioship con la parola chiave
+    # cascade impostata su 'all, delete'
+    todo_title= db.relationship('Todo_title', backref=db.backref('todos_todo_title',cascade="all, delete"))
 
     def __repr__(self):
-        return "<Person ID: {}, description: {}>".format(self.id,self.description)
+        return "<todos ID: {}, description: {}>".format(self.id,self.description)
 
 # db.create_all()  ## non abbiamo piùbisogno di questa funzione
 
@@ -236,8 +241,17 @@ def updat_categoryCompleted(todo_id):
 def del_category():
     try:
         deleted= request.get_json()['deletedItem']
-        Todo.query.filter(Todo.todo_title_id==deleted).delete()
-        Todo_title.query.filter(Todo_title.id==deleted).delete()
+
+        # Inizialmente avevo usato i due comandi di sotto per poter cancellare 
+        # i recod dei genitori e dei figli.
+        #Todo.query.filter(Todo.todo_title_id==deleted).delete() # elimina i figli 
+        #Todo_title.query.filter(Todo_title.id==deleted).delete() # elimina i genitori
+
+        # Poi ho scoperto il 'cascade behaviour' quindi eliminando il genitore si eliminano i figli
+        # ho creato una relatioship nella tabella figlio (vedi il model sopra)
+        # e qui semplicemente:       
+        category_delete= Todo_title.query.get(deleted) # seleziono il record da eliminare
+        db.session.delete(category_delete) # elimino lui e i suoi figli
 
         db.session.commit()
     except: #in caso di errore lo gestiamo
@@ -258,3 +272,9 @@ def index():
 
 if __name__ == '__main__':
     app.run()
+
+
+
+#>>> category_delete= Todo_title.query.get(27)
+#>>> for category in category_delete.todos:
+#...     db.session.delete(category)

@@ -13,3 +13,27 @@ class Todo_title(db.Model):
 
 
 
+const liItem = document.createElement('LI'); // step1: creaimo un elemento <li> da aggiungere alla lista
+                    liItem.id = jsonResponse['id'];
+                    //costruzione della check box RIUSCITA
+                    var inputCheckBox = document.createElement('input');
+                    inputCheckBox.setAttribute("type", "checkbox");
+                    inputCheckBox.dataset.id = jsonResponse['id'];
+                    inputCheckBox.className = 'checkTodosTitlesCompleted'
+
+                    //bottone delete
+                    var btnDel = document.createElement('button');
+                    btnDel.className = 'del_btn'
+                    btnDel.dataset.id = jsonResponse['id'];
+                    btnDel.innerHTML = '&cross;'
+
+                    // step2: definiamo il valore da stampare sul <li>
+                    document.getElementById('todosCategory').appendChild(liItem); //step3: aggiungiamo il valore alla lista
+                    liItem.appendChild(inputCheckBox);
+                    var textnode = document.createTextNode(jsonResponse['title']);
+                    var a = document.createElement('a');
+                    a.appendChild(textnode);
+                    a.title = textnode;
+                    a.href = '/list/' + jsonResponse['id'];
+                    liItem.appendChild(a);
+                    liItem.appendChild(btnDel);
